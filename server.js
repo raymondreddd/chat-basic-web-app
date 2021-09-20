@@ -3,7 +3,7 @@ const path=require('path')
 const http=require('http')
 const socketio = require('socket.io')
 const formatMessage=require('./utils/messages')
-const {userJoin, getCurrentUser} = require('./utils/users')
+const {userJoin,getCurrentUser,userLeave,getRoomUsers} = require('./utils/users')
 const Qs=require('qs') 
 
 const app = express();
@@ -24,8 +24,8 @@ io.on('connection', socket => {
     socket.on('joinRoom',({username,room}) => {
         const user = userJoin(socket.id, username, room)
 
-        console.log(username,room);
-        console.log(user.username,user.room);
+        // console.log(username,room);
+        // console.log(user.username,user.room);
 
         socket.join(user.room)
 
@@ -42,13 +42,24 @@ io.on('connection', socket => {
     //listen 4 chatMessage
     socket.on('chatMessage', (msg) => {
         console.log(msg);
-        io.emit('message',formatMessage('user',msg));
+
+        //for the username handle
+        const user = getCurrentUser(socket.id)
+        io.emit('message',formatMessage(user.username,msg));
     })
 
 
     //when disconnects
     socket.on('disconnect', () => {
-        io.emit(formatMessage(botName,' a user has left chat'))
+
+        //first get which user left
+        const user=userLeave(socket.id);
+
+        if(user){
+            io.to(user.room).emit(formatMessage(botName,`${user.username} has left chat`))
+        }
+
+        
     });
 })
 //env variables
