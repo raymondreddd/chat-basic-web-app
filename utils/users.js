@@ -21,7 +21,7 @@ function userLeave(id) {
 
     if(index !== -1){
         //return users array without user
-        return users.splice(index,1);
+        return users.splice(index,1)[0];
     }
 }
 
